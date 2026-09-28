@@ -1,0 +1,22 @@
+[project]
+name = "treason"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.2",
+    "torch>=2.4.0",
+    "trl>=0.25.1",
+    "wandb>=0.23.1",
+    "zeno-client>=0.1.16",
+    "transformers<5.0.0",
+]
+
+# left in as lecacy - needed if flash attention dependency is added. Using SDPA instead
+[tool.uv.extra-build-dependencies]
+flash-attn = [{ requirement = "torch", match-runtime = true }]
+
+[tool.uv.extra-build-variables]
+flash-attn = { FLASH_ATTENTION_SKIP_CUDA_BUILD = "TRUE" }

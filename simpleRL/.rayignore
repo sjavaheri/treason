@@ -1,0 +1,13 @@
+# .rayignore
+.git/
+*.out
+slurm-*.out
+data/tabmwp/*.jsonl
+checkpoints/
+logs/
+xformers_src/
+xformers_build.log
+examples/simplelr_math_eval/data/
+*.parquet
+*.jsonl
+examples/simplelr_math_eval/data/tabmwp/test.jsonl

@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Eval results
+results/
+old_results/
+
+# Batch job results
+*slurm*
+
+# Figures 
+/figures
+
+# Models 
+/models
