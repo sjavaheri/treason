@@ -1,6 +1,7 @@
 # Distillation Defenses Easily Break After Reinforcement Learning
 _Codename Treason: Reinforcement learning makes simple distillation attacks effective at s**T**ealing **Reason**ing_
 
+[See Paper](https://arxiv.org/abs/2609.35699)
 
 **TL;DR** - Realistic threat models for distillation attacks include reinforcement learning after distillation, which makes very simple attacks effective.
 
@@ -246,7 +247,15 @@ The following examples show how summaries in the datasets above can be expanded.
 
 ## Citation
 ```
-
+@misc{javaheri2026distillationdefenseseasilybreak,
+      title={Distillation Defenses Easily Break After Reinforcement Learning}, 
+      author={Shidan Javaheri and Alexander Panfilov and Oliver Britton and Yarin Gal and Yonatan Gideoni},
+      year={2026},
+      eprint={2609.35699},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2609.35699}, 
+}
 ```
 
 ## Bibliography
