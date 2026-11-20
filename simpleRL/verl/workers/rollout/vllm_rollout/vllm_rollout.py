@@ -141,6 +141,8 @@ class vLLMRollout(BaseRollout):
                 kwargs['stop_token_ids'] = [151645, 151643, 151644, 14582, 16141, 31198] # Combined EOS, Question, Answer, Problem
             elif "0.5b" in config.model_path.lower():
                 kwargs['stop_token_ids'] = [151645, 151643, 151644, 14582, 16141, 31198] # Combined EOS, Question, Answer, Problem
+        elif "gemma" in config.model_path.lower():
+            kwargs['stop_token_ids'] = [1, 107, 9413, 1261] # <eos>, <end_of_turn>, Question, Answer
         else:
             raise NotImplementedError(f"Stop token ids for model path '{config.model_path}' are not implemented")
                 

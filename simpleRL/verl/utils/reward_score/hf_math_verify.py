@@ -26,11 +26,11 @@ import random
 import gc 
 from math_verify import parse, verify
 
-def limit_memory():
-    """Limit the memory of each worker process to 2 GB to prevent sympy bombs."""
-    import resource
-    max_mem = 2 * 1024 * 1024 * 1024 # 2 GB
-    resource.setrlimit(resource.RLIMIT_AS, (max_mem, max_mem))
+# NOTE: limit_memory and hf_verify_with_try MUST come from a module outside the
+# verl package. The pool uses 'spawn', so each worker imports the module that
+# defines them; anything under verl.* pulls in torch (~9 GB of virtual address
+# space here), which cannot fit under the 2 GB RLIMIT_AS those workers set.
+from reward_verify_worker import limit_memory, hf_verify_with_try
 
 class GlobalProcessPool:
     _instance = None
@@ -130,17 +130,7 @@ def extract_solution(solution_str):
         return predict_answer, False
 
 
-def hf_verify_with_try(gold, target):
-    try:
-        parsed_target = parse(target)    
-        parsed_gold = parse(gold)
-        return verify(gold=parsed_gold, target=parsed_target)
-    except Exception as e:
-        print(f"Gold: {gold} Target: {target} Error: {str(e)}")
-        return False
-
-
-def hf_math_equal_subprocess(gold, target, timeout_seconds=10):
+def hf_math_equal_subprocess(gold, target, timeout_seconds=30):
     """
     使用 ProcessPoolExecutor 实现带超时的函数执行
     
@@ -164,7 +154,6 @@ def hf_math_equal_subprocess(gold, target, timeout_seconds=10):
         return False
     except Exception as e:
         print(f"Gold: {gold} Target: {target} Error: {str(e)}")
-        global_executor._initialize_executor()
         return False
 
 

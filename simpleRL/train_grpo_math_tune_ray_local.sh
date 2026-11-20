@@ -47,6 +47,7 @@ REMOVE_CLIP=False
 ROLLOUT_TENSOR_MODEL_PARALLEL_SIZE=1
 MICRO_ROLLOUT_BATCH_SIZE=256
 REMOVE_PREVIOUS_CKPT=False
+ADD_BOS_TOKEN=False
 
 generate_suffix() {
   local suffix=""
@@ -63,6 +64,7 @@ generate_suffix() {
       --learning_rate) suffix+="_lr$2"; shift 2 ;;
       --ppo_mini_batch_size) suffix+="_ppomini$2"; shift 2 ;;
       --ppo_micro_batch_size) shift 2 ;;
+      --add_bos_token) shift 2 ;;
       --kl_loss_coef) suffix+="_klcoef$2"; shift 2 ;;
       --entropy_coeffient) suffix+="_entcoef$2"; shift 2 ;;
       --clip_ratio) suffix+="_clipratio$2"; shift 2 ;;
@@ -132,6 +134,7 @@ while [[ "$#" -gt 0 ]]; do
     --test_freq) TEST_FREQ="$2"; shift 2 ;;
     --remove_clip) REMOVE_CLIP="$2"; shift 2 ;;
     --remove_previous_ckpt) REMOVE_PREVIOUS_CKPT="$2"; shift 2 ;;
+    --add_bos_token) ADD_BOS_TOKEN="$2"; shift 2 ;;
     --suffix) SUFFIX="$2"; shift 2 ;;
     *)
       echo "Unknown option: $1"
@@ -159,6 +162,7 @@ echo "Dataset Name: $DATASET_NAME"
 echo "Model Name: $MODEL_NAME"
 echo "Remove Clip: $REMOVE_CLIP"
 echo "Remove Previous Ckpt: $REMOVE_PREVIOUS_CKPT"
+echo "Add BOS Token: $ADD_BOS_TOKEN"
 echo "LOG FILE PATH: $LOG_FILE_PATH"
 
 max_num_batched_tokens=$(expr $MAX_PROMPT_LENGTH + $MAX_RESPONSE_LENGTH + 1000)
@@ -198,6 +202,7 @@ ray job submit --address=${HEAD_IP}:${HEAD_PORT} \
   data.val_batch_size=$VAL_BATCH_SIZE \
   data.max_prompt_length=$MAX_PROMPT_LENGTH \
   data.max_response_length=$MAX_RESPONSE_LENGTH \
+  data.add_bos_token=$ADD_BOS_TOKEN \
   actor_rollout_ref.model.path=$HDFS_MODEL_PATH/$MODEL_NAME \
   actor_rollout_ref.actor.optim.lr=$LEARNING_RATE \
   actor_rollout_ref.model.use_remove_padding=True \

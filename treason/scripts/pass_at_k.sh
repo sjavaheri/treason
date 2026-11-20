@@ -28,7 +28,7 @@ if ! command -v nvcc &> /dev/null; then
 fi
 # tag venv with a uuid
 VENV_DIR="$LOCALDIR/treason_pass_at_k_$(uuidgen)"
-PROJECT_DIR="$HOME/projects/treason"
+PROJECT_DIR="$HOME/projects/treason/treason"
 
 # create venv if it doesn't exist
 if [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/python" ]; then
@@ -40,7 +40,7 @@ if [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/python" ]; then
     # install configured dependencies
     uv sync --active
 
-    cd "$HOME/projects/treason/eval/lm-evaluation-harness"
+    cd "$HOME/projects/treason/treason/eval/lm-evaluation-harness"
     uv pip install -e .[math]
     uv pip install ray
 
@@ -54,7 +54,7 @@ else
     # Optional: fast sync if dependencies change in pyproject.toml
     uv sync --active
 
-    cd "$HOME/projects/treason/eval/lm-evaluation-harness"
+    cd "$HOME/projects/treason/treason/eval/lm-evaluation-harness"
     uv pip install -e .[math]
     uv pip install ray
 

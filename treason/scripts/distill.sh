@@ -14,7 +14,7 @@ export WANDB_DIR="$SCRATCHDIR"
 export WANDB_API_KEY=""
 export HF_TOKEN=""
 VENV_DIR="$SCRATCHDIR/treason_distill_venv"
-PROJECT_DIR="$HOME/projects/openai_treason"
+PROJECT_DIR="$HOME/projects/treason/treason"
 
 # variables 
 DATASET=""

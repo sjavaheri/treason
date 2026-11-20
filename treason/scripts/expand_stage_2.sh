@@ -9,7 +9,7 @@ export UV_CACHE_DIR=$SCRATCHDIR/.cache/uv
 
 # fill in values 
 VENV_DIR="$SCRATCHDIR/treason_expand"
-PROJECT_DIRECTORY="$HOME/projects/openai_treason"
+PROJECT_DIRECTORY="$HOME/projects/treason/treason"
 export WANDB_API_KEY=""
 export HF_TOKEN=""
 
@@ -44,7 +44,7 @@ if [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/python" ]; then
     # install configured dependencies
     uv sync --active
 
-    cd "$HOME/projects/treason/eval/lm-evaluation-harness"
+    cd "$HOME/projects/treason/treason/eval/lm-evaluation-harness"
     uv pip install -e .[math]
     uv pip install "lm_eval[vllm]"
     uv pip install ray

@@ -69,7 +69,8 @@ class RLHFDataset(Dataset):
                  cache_dir='~/.cache/verl/rlhf',
                  chat_template_func=None,
                  return_raw_chat=False,
-                 truncation='error'):
+                 truncation='error',
+                 add_bos_token=False):
         if not isinstance(parquet_files, (List, ListConfig)):
             parquet_files = [parquet_files]
 
@@ -85,6 +86,7 @@ class RLHFDataset(Dataset):
         self.return_raw_chat = return_raw_chat
         self.chat_template_func = chat_template_func
         self.truncation = truncation
+        self.add_bos_token = add_bos_token
 
         # whether to store the dataset in state_dict()
         # default not store
@@ -147,7 +149,8 @@ class RLHFDataset(Dataset):
                                                                          max_length=self.max_prompt_length,
                                                                          pad_token_id=self.tokenizer.pad_token_id,
                                                                          left_pad=True,
-                                                                         truncation=self.truncation)
+                                                                         truncation=self.truncation,
+                                                                         add_bos_token=self.add_bos_token)
 
         position_ids = compute_position_id_with_mask(attention_mask)
 
@@ -173,3 +176,13 @@ class RLHFDataset(Dataset):
                 del state['dataframe']
             return state
         return self.__dict__.copy()
+
+    def __setstate__(self, state):
+        # A data.pt written before an option existed has no entry for it, and unpickling
+        # never calls __init__, so back-fill defaults here. Add new optional attributes
+        # to this dict so old checkpoints keep resuming.
+        defaults = {'add_bos_token': False}
+        self.__dict__.update(state)
+        for key, default in defaults.items():
+            if key not in self.__dict__:
+                setattr(self, key, default)

@@ -182,8 +182,14 @@ def compute_policy_loss(old_log_prob, log_prob, advantages, eos_mask, cliprange)
 
     """
     negative_approx_kl = log_prob - old_log_prob
-    ratio = torch.exp(negative_approx_kl)
     ppo_kl = verl_F.masked_mean(-negative_approx_kl, eos_mask)
+
+    # torch.exp overflows fp32 at ~88.7. GRPO assigns an advantage of exactly 0.0 to
+    # every group whose rollouts all scored the same, so a single overflowing token in
+    # such a group gives -0.0 * inf = NaN, which clip_grad_norm_ then multiplies into
+    # every parameter. Bound the exponent: |negative_approx_kl| is ~1e-2 in a healthy
+    # step, so this only binds once the policy has drifted far off-policy.
+    ratio = torch.exp(torch.clamp(negative_approx_kl, -10.0, 10.0))
 
     pg_losses = -advantages * ratio
     pg_losses2 = -advantages * torch.clamp(ratio, 1.0 - cliprange, 1.0 + cliprange)

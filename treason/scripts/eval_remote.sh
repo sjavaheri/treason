@@ -10,8 +10,8 @@ export UV_CACHE_DIR=$SCRATCHDIR/.cache/uv
 export WANDB_API_KEY=""
 export HF_TOKEN=""
 VENV_DIR="$SCRATCHDIR/treason_$(uuidgen)"
-PROJECT_DIR="$HOME/projects/treason/eval/lm-evaluation-harness"
-RESULTS_DIR="$HOME/projects/treason/results"
+PROJECT_DIR="$HOME/projects/treason/treason"
+RESULTS_DIR="$HOME/projects/treason/treason/results"
 
 if [ -z "$1" ] || [ -z "$2" ]; then
     echo "Error: Please provide a model name and a task name."
