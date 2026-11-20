@@ -22,7 +22,7 @@ export HF_TOKEN=""
 
 SHARED_VENV_DIR="$SCRATCHDIR/simpleRL-reason"
 VENV_DIR="$LOCALDIR/simpleRL-reason"
-PROJECT_DIR="$HOME/projects/simpleRL-reason"
+PROJECT_DIR="$HOME/projects/treason/simpleRL"
 RESULTS_DIR="$HOME/projects/simpleRL-reason/results"
 
 MODEL_NAME=""

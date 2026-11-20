@@ -17,8 +17,8 @@ export UV_CACHE_DIR=$SCRATCHDIR/.cache/uv
 export WANDB_API_KEY=""
 export HF_TOKEN=""
 VENV_DIR="$SCRATCHDIR/eval_venv_$(uuidgen)"
-PROJECT_DIR="$HOME/projects/treason/eval/lm-evaluation-harness"
-RESULTS_DIR="$HOME/projects/treason/results"
+PROJECT_DIR="$HOME/projects/treason/treason"
+RESULTS_DIR="$HOME/projects/treason/treason/results"
 
 # create venv if it doesn't exist
 if [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/python" ]; then

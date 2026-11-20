@@ -247,7 +247,8 @@ def tokenize_and_postprocess_data(prompt: str,
                                   max_length: int,
                                   pad_token_id: int,
                                   left_pad=True,
-                                  truncation='error'):
+                                  truncation='error',
+                                  add_bos_token=False):
     """
     input_data is the output from tokenizer.
     """
@@ -259,6 +260,14 @@ def tokenize_and_postprocess_data(prompt: str,
     attention_mask = input_data['attention_mask']
 
     assert input_ids.ndim == 2
+
+    # Gemma is trained with <bos> always present and degrades badly without it. We
+    # tokenize with add_special_tokens=False above, so prepend it explicitly when asked.
+    # Opt-in (default off) so runs trained without it stay reproducible.
+    if add_bos_token and tokenizer.bos_token_id is not None:
+        bos = torch.full((input_ids.shape[0], 1), tokenizer.bos_token_id, dtype=input_ids.dtype)
+        input_ids = torch.cat((bos, input_ids), dim=-1)
+        attention_mask = torch.cat((torch.ones_like(bos, dtype=attention_mask.dtype), attention_mask), dim=-1)
 
     sequence_length = input_ids.shape[-1]
     if sequence_length < max_length:

@@ -1,92 +1,52 @@
-# Distillation Defenses Easily Break After Reinforcement Learning
-_Codename Treason: Reinforcement learning makes simple distillation attacks effective at s**T**ealing **Reason**ing_
+# A New Threat Model for Stealing Proprietary Language Model Reasoning 
+_Codename Treason: s**T**ealing **Reason**ing_
 
 
-**TL;DR** - Realistic threat models for distillation attacks include reinforcement learning after distillation, which makes very simple attacks effective.
+TL;DR - realistic distillation attacks pre-process reasoning traces before distillation, and train models further with reinforcement learning after distillation. Existing defenses are shown to be ineffective against the simplest instance of these distillation attacks
+
+**Abstract** -
+
+Distillation attacks steal the reasoning capabilities of closed-source large language models, allowing bad actors to replicate state-of-the-art performance at low cost (Google, [2026](https://cloud.google.com/blog/topics/threat-intelligence/distillation-experimentation-integration-ai-adversarial-use); Anthropic, [2026a](https://www.anthropic.com/news/detecting-and-preventing-distillation-attacks)). Attackers systematically collect a large volume of frontier model reasoning traces and then train (i.e., ``distill'') their own models on these traces. Model providers defend against distillation attacks by obscuring the model's full reasoning traces, instead returning to users only (sometimes altered) reasoning summaries (Anthropic, [2026b](https://anthropic.com/aug-2026-risk-report); OpenAI Developers, [2026](https://developers.openai.com/api/docs/guides/reasoning#reasoning-summaries)). We show that existing defences against stealing reasoning are insufficient -- summaries describe the steps required to solve complex problems, enabling simple methods to effectively reconstruct full reasoning traces. Distilling on this reconstructed reasoning, coupled with subsequent reinforcement learning, allows an attacker to reach capabilities equal to those achieved given full raw reasoning. More broadly, this new threat model implies that any system which leaks sufficient information to reconstruct reasoning traces is likely compromised. Preventing information leakage is likely unrealistic due to its dual use, as withholding information harms benign users and malicious attackers alike. We conclude by advocating for a wider adoption of defences based on multiple rather than single queries (Juuti et al., [2019](https://arxiv.org/abs/1805.02628); Zhang et al., [2021](https://doi.org/10.1145/3474369.3486863); Liu et al., [2026](https://arxiv.org/abs/2606.05725)), which we believe would be more effective against a wide range of attacks on language models (Davies et al., [2026](https://arxiv.org/abs/2602.15001); Davies et al., [2025](https://papers.neurips.cc/paper_files/paper/2025/hash/6ded182245f8e4db3963d2027174133d-Abstract-Conference.html)).
 
 
-![alt text](figures/distillation-attacks-illustrated.png)
-
-**Figure 1** *- **A distillation attack's pipeline**. Attackers amass large volumes of reasoning traces from proprietary LLMs and train ("distill") their own models on these traces, followed by further training of distilled models with reinforcement learning (RL). Existing threat models assume attackers train models only with distillation, while a realistic distillation attack likely follows distillation with RL.*
+![alt text](figures/figure_1.png)
 
 
-## Summary
-
-- Reinforcement learning outperforms distillation at improving the reasoning capabilities of a model, and combining distillation and reinforcement learning outperforms either method alone. Distillation attacks by the most capable attackers thus likely combine distillation and reinforcement learning. 
-- Evaluating distillation defenses only after distillation creates a false sense of security
-- Reinforcement learning makes simple distillation attacks effective. Simple attacks can steal reasoning capabilities from existing closed-source language models using data easily obtainable from current APIs, yielding reasoning improvements equivalent to more sophisticated attacks that extract the full hidden traces. 
-- Any distillation defense that leaks sufficient information to reconstruct approximate reasoning traces is likely ineffective.
+**Figure 1** *- **A threat model for distillation attacks that demonstrates how summaries leak sufficient information to distill reasoning capabilities from closed-source language models.** **a**, Various distillation attack pipelines. Attackers amass large volumes of outputs (reasoning summaries and final answers) from proprietary LLMs and train ("distill") their own models on these outputs. In the proposed threat model, attackers can pre-process outputs and further train distilled models with reinforcement learning. Existing threat models assume attackers train models directly on returned outputs with distillation alone, while a realistic distillation attack likely pre-processes outputs and uses distillation to bootstrap further RL training. **b**, A simple, illustrative example of output pre-processing, where a weak expander model reconstructs full traces by expanding summaries and final answers given by closed-source models. **c**, A frontier LLM reasoning training pipeline, based on the one used for DeepSeek-R1 (Guo et al., [2025](https://doi.org/10.1038/s41586-025-09422-z)). Distillation attacks enable cheaply collecting high-quality reasoning traces, allowing attackers to use fewer rounds of distillation and reinforcement learning. **d**, When conditioned on outputs from closed-source models, a small LLM (the "expander") can correctly answer questions it got wrong previously. **e**, With the attack illustrated here, an attacker's model distilled on expanded summaries approximately matches the performance of a model distilled on the full raw reasoning traces after RL training. Baselines show that accuracy improvements after RL training come from information in the final answers and summaries, not from the weak expander. Full traces were obtained with the extraction attack of Panfilov et al. ([2026](https://arxiv.org/abs/2608.09867)), excluding Gemini models, which had the extraction attack patched when the experiments were performed. Expanded summaries are constructed using information readily available through the model APIs.*
 
 
 ## Table of Contents
-- [Key Results](#key-results)
-  - [Threat Models for Realistic Distillation Attacks Must Include Reinforcement Learning](#threat-models-for-realistic-distillation-attacks-must-include-reinforcement-learning)
-  - [RL-Free Evaluations Can Give a False Sense of Security](#rl-free-evaluations-can-give-a-false-sense-of-security)
-  - [RL Makes Simple Distillation Attacks Effective](#rl-makes-simple-distillation-attacks-effective)
-  - [Potential Defenses](#potential-defenses)
-- [Replicating Experiments](#replicating-experiments)
-  - [Obtaining Full Traces From an Open-Source Teacher](#obtaining-full-traces-from-an-open-source-teacher)
-  - [Distillation](#distillation)
-  - [Reinforcement Learning](#reinforcement-learning)
-  - [Evaluation](#evaluation)
-  - [Pass@k Evaluations](#passk-evaluations)
-  - [Obtaining Open Source Summaries](#obtaining-open-source-summaries)
-  - [Obtaining Summaries from Closed-Source Models](#obtaining-summaries-from-closed-source-models)
-  - [Reasoning Trace Expansion](#reasoning-trace-expansion)
+- [Running Experiments](#running-experiments)
+  - [Setup](#setup)
+    - [HPC Cluster (Non-standard Hardware)](#hpc-cluster-non-standard-hardware)
+    - [Environment Variables and Versions](#environment-variables-and-versions)
+  - [Running Specific Experiments](#running-specific-experiments)
+    - [Obtaining Full Traces From an Open-Source Teacher](#obtaining-full-traces-from-an-open-source-teacher)
+    - [Distillation](#distillation)
+    - [Reinforcement Learning](#reinforcement-learning)
+    - [Evaluation](#evaluation)
+    - [Pass@k Evaluations](#passk-evaluations)
+    - [Obtaining Open-Source Summaries](#obtaining-open-source-summaries)
+    - [Obtaining Summaries from Closed-Source Models](#obtaining-summaries-from-closed-source-models)
+    - [Reasoning Trace Expansion](#reasoning-trace-expansion)
+- [Example with Simple Datasets](#example-with-simple-datasets)
+- [Citation](#citation)
 - [Bibliography](#bibliography)
 
 
-## Key Results
+# Running Experiments
 
-[_Skip to running experiments_](#running-experiments)
+## Setup
 
+We recommend using an agent to assist in the fast setup of all environments
 
-### Threat Models for Realistic Distillation Attacks Must Include Reinforcement Learning
+### HPC Cluster (Non-standard Hardware)
 
+Experiments were run on an HPC consisting of nodes with 4 NVIDIA GH200 Grace Hopper Superchips each. Each superchip pairs a 72-core Arm (aarch64) Grace CPU with an H100 GPU with 96 GB of HBM3 memory.
 
-![alt text](figures/rl-vs-distillation.png)
+### Environment Variables and Versions
 
-**Figure 2** *- **RL outperforms distillation, with distillation followed by RL outperforming both**. An attacker aiming to train a state-of-the-art model would likely use distillation to bootstrap subsequent RL, rather than relying solely on distillation. Accuracies are averages over the GSM8K (Cobbe et al., [2021](https://arxiv.org/abs/2110.14168)), Minerva Math (Hendrycks et al., [2021](https://arxiv.org/abs/2103.03874)), and MATH500 (Lightman et al., [2024](https://proceedings.iclr.cc/paper_files/paper/2024/file/aca97732e30bcf1303bc22ac3924fd16-Paper-Conference.pdf)) datasets.*
-
-![alt text](figures/pass-at-k.png)
-
-**Figure 3** *- **Distillation improves pass@k for high k, allowing futher RL to lead to accuracy improvements (pass@1)**. In this sense, distillation bootstraps subsequent RL training. Pass@k is averaged over the GSM8K, Minerva, and MATH500 datasets.*
-
-### RL-Free Evaluations Can Give a False Sense of Security
-
-![alt text](figures/antidistillation-sampling-ineffective.png)
-
-**Figure 4** *- **Antidistillation sampling can be effective following distillation but break following RL**. Antidistillation sampling (Savani et al., [2025](https://openreview.net/forum?id=Vo2UHqMu8t)) modifies teacher traces to "poison" distilled students, degrading their performance after distillation. A Qwen2.5-0.5B (Qwen Team, [2025](https://arxiv.org/abs/2412.15115)) student is distilled normally and with low, mild, or high poisoning levels; after RL, low- to mildly poisoned student models close the performance gap with the unpoisoned model. An attacker using RL would benefit similarly from antidistillation-sampled data as from regular data. Left: the average accuracy over the GSM8K, MATH500, and Minerva datasets. Right: the performance over Minerva, which is harder than GSM8K and similar in difficulty to MATH500.*
-
-### RL Makes Simple Distillation Attacks Effective
-
-Proprietary LLM APIs return only a summarized version of a model's reasoning to the user (Anthropic, [2026](https://anthropic.com/aug-2026-risk-report); OpenAI Developers, [2026](https://developers.openai.com/api/docs/guides/reasoning#reasoning-summaries)), while the model's final answer is returned as-is. A simple attack to reconstruct full reasoning traces is depicted below. 
-
-![alt text](figures/simple-distillation-attack.png)
-
-**Figure 5** *- **A simple attack to approximately reconstruct closed-source models' reasoning traces**. Note that the reconstructed traces need not be faithful to the hidden, typically unknown, full reasoning traces, but only similarly useful for bootstrapping a model's reasoning.*
-
-
-![alt text](figures/open-source-attack.png)
-
-**Figure 6** *- **Summaries leak sufficient information to distill reasoning capabilities equal to those achieved using full traces**. After reinforcement learning, the model distilled on expanded summaries (right) performs similarly to the model distilled on full, unobfuscated reasoning traces (middle). Distilling on either full traces or expanded summaries decently outperforms no distillation (left). Open-source setting, with Qwen2.5-14B-RL as the attacked teacher, and Llama-3.2-3B (Grattafiori et al., [2024](https://arxiv.org/abs/2407.21783)) base as the attacker's model.*
-
-#### Stealing Closed-Source Reasoning
-
-![alt text](figures/closed-source-attack.png)
-
-**Figure 7** *- **Summaries leak sufficient information to distill reasoning capabilities from closed-source models**. Full traces were obtained with the extraction attack of Panfilov et al. ([2026](https://arxiv.org/abs/2608.09867)), excluding Gemini models, which had the extraction attack patched at the time of writing. After reinforcement learning, a base model (Llama-3.2-3B) distilled on expanded summaries performs similarly to the same model distilled on full traces. Expanded summaries are constructed using information readily available through the model APIs.*
-
-### Potential Defenses
-
-- Results imply that any distillation defense that leaks sufficient information to reconstruct reasoning traces will likely be ineffective. 
-- Reasoning traces are harder to reconstruct by omitting information from generated answers, but omissions would damage user experience due to dual-use
-  - For example, a researcher can ask a model to generate a proof as part of their research or an attacker can ask the same to improve their own model's capabilities. Removing steps of the proof would harm both the researcher and the attacker alike. 
-- Developing more effective real-time batch-level defenses is an important avenue of future work; not just as a more effective defense against distillation attacks, but for defenses against a broad class of vulnerabilities (see also Davies et al., [2026](https://arxiv.org/abs/2602.15001))
-
-## Running Experiments
-
-All experiments use uv to manage virtual environments, which can be installed with the following command
+All experiments use uv to manage virtual environments, which can be installed with the following command (**time: 0-10s**)
 
 ```bash 
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -96,9 +56,14 @@ All experiments require the `$SCRATCHDIR` environment variable to be set to the 
 - Distilled models are saved to `$SCRATCHDIR/models`
 - RL checkpoints are saved to `$SCRATCHDIR/checkpoints`
 
-Scripts to run experiments are provided in the following section. Key notes:
+Scripts to run each experiment are detailed in the next section.
+
+Environemnt versions are managed by uv, and the scripts that run each job. Typical install times vary for each environment, with estimates provided next to each script in later sections. 
+
 - At the top of each script are environment variables that should be set / edited.
-- Scripts were written for an HPC with arm64 architecture, and required compiling many libraries from scratch. Virtual environment setup may need to be modified for different architectures, but library versions should ideally be kept the same.
+- Because scripts were written for an HPC with arm64 architecture, this required compiling many libraries from scratch, increasing install time. Virtual environment setup of each script may need to be modified for different architectures, but library versions should ideally be kept the same. Please use an agent to do this, if necessary. 
+
+## Running Specific Experiments
 
 ### Obtaining Full Traces From an Open-Source Teacher
 
@@ -244,6 +209,10 @@ The following examples show how summaries in the datasets above can be expanded.
 ./treason/scripts/expand_stage_2.sh --dataset_path treason/datasets/claude-stage-1 --output_path treason/datasets/claude-stage-2
 ```
 
+## Example with Simple Datasets
+
+Coming soon! By Nov 22
+
 ## Citation
 ```
 
@@ -251,19 +220,31 @@ The following examples show how summaries in the datasets above can be expanded.
 
 ## Bibliography
 
-Anthropic. "Risk Report: August 2026." *Anthropic* (2026). Published under version 3.4 of the Responsible Scaling Policy.
+Anthropic. "Detecting and Preventing Distillation Attacks." *Anthropic News* (2026a). Accessed: 21 April 2026.
+
+Anthropic. "Risk Report: August 2026." *Anthropic* (2026b). Published under version 3.4 of the Responsible Scaling Policy.
 
 Cobbe, Karl, et al. "Training Verifiers to Solve Math Word Problems." *arXiv preprint arXiv:2110.14168* (2021).
+
+Davies, Xander, et al. "Fundamental Limitations in Pointwise Defences of LLM Finetuning APIs." *Advances in Neural Information Processing Systems* (2025).
 
 Davies, Xander, et al. "Boundary Point Jailbreaking of Black-Box LLMs." *arXiv preprint arXiv:2602.15001* (2026).
 
 Gao, Leo, et al. "The Language Model Evaluation Harness." *Zenodo* (2024).
 
+Google. "Distillation, Experimentation, and (Continued) Integration of AI for Adversarial Use." *Google Threat Intelligence Group Cloud Blog* (2026). Accessed: 21 April 2026.
+
 Grattafiori, Aaron, et al. "The Llama 3 Herd of Models." *arXiv preprint arXiv:2407.21783* (2024).
+
+Guo, Daya, et al. "DeepSeek-R1 Incentivizes Reasoning in LLMs Through Reinforcement Learning." *Nature* (2025).
 
 Hendrycks, Dan, et al. "Measuring Mathematical Problem Solving With the MATH Dataset." *Advances in Neural Information Processing Systems* (2021).
 
+Juuti, Mika, et al. "PRADA: Protecting Against DNN Model Stealing Attacks." *2019 IEEE European Symposium on Security and Privacy (EuroS&P)* (2019).
+
 Lightman, Hunter, et al. "Let's Verify Step by Step." *International Conference on Learning Representations* (2024).
+
+Liu, Shuze, et al. "An Embarrassingly Simple Detector for Model Extraction Attacks in Large Language Model API Traffic." *arXiv preprint arXiv:2606.05725* (2026).
 
 OpenAI Developers. "Reasoning models: Reasoning summaries." *OpenAI Developers* (2026). Accessed: 2026-08-30.
 
@@ -274,3 +255,5 @@ Qwen Team. "Qwen2.5 Technical Report." *arXiv preprint arXiv:2412.15115* (2025).
 Savani, Yash, et al. "Antidistillation Sampling." *The Thirty-ninth Annual Conference on Neural Information Processing Systems* (2025).
 
 Zeng, Weihao, et al. "SimpleRL-Zoo: Investigating and Taming Zero Reinforcement Learning for Open Base Models in the Wild." *arXiv preprint arXiv:2503.18892* (2025).
+
+Zhang, Zhanyuan, et al. "SEAT: Similarity Encoder by Adversarial Training for Detecting Model Extraction Attack Queries." *Proceedings of the 14th ACM Workshop on Artificial Intelligence and Security* (2021).

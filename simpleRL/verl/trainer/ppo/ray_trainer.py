@@ -457,7 +457,8 @@ class RayPPOTrainer(object):
                                          max_prompt_length=self.config.data.max_prompt_length,
                                          filter_prompts=True,
                                          return_raw_chat=self.config.data.get('return_raw_chat', False),
-                                         truncation='error')
+                                         truncation='error',
+                                         add_bos_token=self.config.data.get('add_bos_token', False))
         # use sampler for better ckpt resume
         if self.config.data.shuffle:
             train_dataloader_generator = torch.Generator()
@@ -478,7 +479,8 @@ class RayPPOTrainer(object):
                                        max_prompt_length=self.config.data.max_prompt_length,
                                        filter_prompts=True,
                                        return_raw_chat=self.config.data.get('return_raw_chat', False),
-                                       truncation='error')
+                                       truncation='error',
+                                       add_bos_token=self.config.data.get('add_bos_token', False))
         self.val_dataloader = DataLoader(dataset=self.val_dataset,
                                          batch_size=self.config.data.val_batch_size,
                                          shuffle=True,
@@ -753,6 +755,9 @@ class RayPPOTrainer(object):
         dataloader_local_path = os.path.join(global_step_folder, 'data.pt')
         self.train_dataloader = torch.load(dataloader_local_path)
         if isinstance(self.train_dataloader.dataset, RLHFDataset):
+            # The val dataset is rebuilt from config on every resume, so let config win
+            # here too, otherwise train and val could disagree about the BOS token.
+            self.train_dataloader.dataset.add_bos_token = self.config.data.get('add_bos_token', False)
             self.train_dataloader.dataset.resume_dataset_state()
 
     def _balance_batch(self, batch: DataProto, metrics, logging_prefix='global_seqlen'):

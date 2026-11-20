@@ -23,7 +23,7 @@ export HF_TOKEN=""
 SHARED_VENV_DIR="$SCRATCHDIR/simpleRL-reason"
 VENV_DIR="$LOCALDIR/simpleRL-reason"
 # location of the simpleRL folder
-PROJECT_DIR="$HOME/projects/openai_treason/simpleRL"
+PROJECT_DIR="$HOME/projects/treason/simpleRL"
 
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
