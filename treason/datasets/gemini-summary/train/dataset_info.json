@@ -1,0 +1,48 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "system_prompt": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "user_prompt": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "question": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "summary": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "full_trace": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "num_tokens": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "num_input_tokens": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "final_answer": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "model": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "reasoning_effort": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": ""
+}

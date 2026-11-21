@@ -4,7 +4,7 @@
 #SBATCH --mem=0
 #SBATCH --partition=workq
 #SBATCH --job-name="simple-rl"
-#SBATCH --time=4:00:00
+#SBATCH --time=24:00:00
 
 set -e
 
@@ -154,4 +154,4 @@ export MKL_NUM_THREADS=1
 export MALLOC_ARENA_MAX=2
 export RAYON_NUM_THREADS=1
 
-bash "$PROJECT_DIR/train_grpo_math_tune_ray.sh" --model_name Llama-3.2-3B --dataset_name simplelr_abel_level1to4 --max_response_length 2048  --train_batch_size 1024 --rollout_n 8 --kl_loss_coef 0.0001 --entropy_coeffient 0.001 --rollout_gpu_memory_util 0.6 --rollout_tp 1 --save_freq 10 --micro_rollout_batch_size 128 --ppo_micro_batch_size 2
+bash "$PROJECT_DIR/train_grpo_math_tune_ray_llama.sh" --model_name Llama-3.2-3B --dataset_name simplelr_abel_level1to4 --max_response_length 2048  --train_batch_size 1024 --rollout_n 8 --kl_loss_coef 0.0001 --entropy_coeffient 0.001 --rollout_gpu_memory_util 0.6 --rollout_tp 1 --save_freq 10 --micro_rollout_batch_size 128 --ppo_micro_batch_size 2
