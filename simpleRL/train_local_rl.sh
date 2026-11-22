@@ -48,7 +48,9 @@ fi
 
 # hpc specific environment setup
 
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Pinned: a new uv release can change its cache format, which orphans the cached
+# source builds (torchvision, triton, flash-attn, xformers) and forces recompiles.
+curl -LsSf https://astral.sh/uv/0.13.9/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 
 # Prefer a node-local venv on $LOCALDIR (fast NVMe, private to this job). Running the
@@ -87,6 +89,10 @@ cd "$PROJECT_DIR"
 uv pip install "setuptools<70.0.0" wheel packaging ninja cmake
  
 uv pip install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu124
+# Must be set before the first source build: if TORCH_CUDA_ARCH_LIST is unset, torch 2.4
+# parses its own arch list, which includes "sm_90a", and crashes on int('90a').
+export FORCE_CUDA="1"
+export TORCH_CUDA_ARCH_LIST="9.0" # Grace Hopper architecture
 # Build torchvision from GitHub, but set BUILD_VERSION=0.19.0 so it installs precisely as "0.19.0"
 # This prevents uv from rejecting it as "0.19.0a0+git" when installing vllm
 BUILD_VERSION=0.19.0 uv pip install "git+https://github.com/pytorch/vision.git@v0.19.0" --no-build-isolation --reinstall-package torchvision
@@ -95,9 +101,6 @@ if ! command -v nvcc &> /dev/null; then
     echo "ERROR: nvcc (CUDA compiler) not found in PATH! xformers will build as CPU-only. Please fix the CUDA module load."
     exit 1
 fi
-
-export FORCE_CUDA="1"
-export TORCH_CUDA_ARCH_LIST="9.0" # Grace Hopper architecture
 
 echo "Checking PyTorch CUDA status before compiling xformers..."
 python -c "import torch; print('PyTorch version:', torch.__version__); print('CUDA available:', torch.cuda.is_available())"

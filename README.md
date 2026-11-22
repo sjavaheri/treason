@@ -45,7 +45,7 @@ Estimates for install times and run times are provided alonside each script. The
 
 ## Setup
 
-We recommend using an agent to assist in the setup of all environments
+We recommend using an agent to assist in the setup of all environments.
 
 ### HPC Cluster (Non-standard Hardware)
 
@@ -64,7 +64,7 @@ All experiments require the `$SCRATCHDIR` environment variable to be set to the 
 - Distilled models are saved to `$SCRATCHDIR/models`
 - RL checkpoints are saved to `$SCRATCHDIR/checkpoints`
 
-Environemnt versions are managed by uv, and the scripts that run each job. Typical install times vary for each environment, with estimates provided next to each script in later sections. 
+Environemnt versions are managed by uv, and the scripts that run each job. Typical install times vary for each environment, with estimates provided next to each script in later sections. Install times assume high speed internet. 
 
 - At the top of each script are environment variables that should be set / edited.
 - Because scripts were written for an HPC with arm64 architecture, many libraries had to be compilied from scratch, increasing install time the first time a script is run significanltly in some cases. These cases are clearly marked with a comment stating `compiled from scratch`. Virtual environment setup of each script may need to be modified for different architectures, but library versions should ideally be kept the same. Please use an agent to do this.  
@@ -75,11 +75,11 @@ Scripts to run each experiment are detailed in the next section.
 
 ### Obtaining Full Traces From an Open-Source Teacher
 
-The following script can be used to obtain full traces from an open source teacher model. The main function in `reason.py` can be edited to change the dataset or prompt used to generate the traces. 
+The following script can be used to obtain full traces from any open source model. The main function in `reason.py` can be edited to change the dataset or prompt used to generate the traces. 
 
 ```bash 
 # ./treason/scripts/reason.sh <model_name> <output_path>
-./treason/scripts/reason.sh Qwen/Qwen2.5-0.5B treason/datasets/medium-1.5B
+./treason/scripts/reason.sh Qwen/Qwen2.5-0.5B treason/datasets/medium-0.5B
 # install time: ~ 1 - 5m (first time) | 0 - 1m (afterwards)
 # run time: ~ 1 - 5m
 ```
@@ -97,7 +97,7 @@ Any full traces can be summarized with the following command:
 ```
 
 ### Obtaining Summaries from Closed-Source Models
-API queries used to obtain summaries and final answers from closed source models are shown below.
+API queries used to obtain summaries and final answers from closed source models are shown below. Each takes roughly 2 - 4 h and $200 - $500.
 
 #### Claude-Sonnet-4.6
 
@@ -295,7 +295,6 @@ for d in gsm8k-simple minerva_math_simple minerva_math500_simple; do
   done
 done
 ```
-
 
 ## Bibliography
 

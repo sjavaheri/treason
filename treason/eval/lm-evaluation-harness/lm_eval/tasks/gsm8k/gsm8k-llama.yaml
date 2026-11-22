@@ -1,0 +1,48 @@
+tag:
+  - math_word_problems
+task: gsm8k-llama
+dataset_path: openai/gsm8k
+dataset_name: main
+output_type: generate_until
+training_split: train
+fewshot_split: train
+test_split: test
+doc_to_text: "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are a helpful assistant.<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n{{question}}\nPlease reason step by step, and put your final answer within \\boxed{}.<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+doc_to_target: "{{answer}}" 
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: false
+    regexes_to_ignore:
+      - ","
+      - "\\$"
+      - "(?s).*#### "
+      - "\\.$"
+
+generation_kwargs:
+  until:
+    - "Question:"
+    - "</s>"
+    - "<|eot_id|>"
+    - "Q:"
+    - "[Question]"
+  do_sample: false
+  temperature: 0.0
+repeats: 1
+num_fewshot: 0
+filter_list:
+  - name: "strict-match"
+    filter:
+      - function: "regex"
+        regex_pattern: "\\\\boxed{(\\-?[0-9\\.\\,]+)}"
+      - function: "take_first"
+  - name: "flexible-extract"
+    filter:
+      - function: "regex"
+        group_select: -1
+        regex_pattern: "(-?[$0-9.,]{2,})|(-?[0-9]+)"
+      - function: "take_first"
+metadata:
+  version: 3.0

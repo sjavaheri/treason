@@ -42,7 +42,7 @@ if [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/python" ]; then
     echo "Virtualenv at $VENV_DIR created and activated"
 
     # install configured dependencies
-    uv sync --active
+    uv sync --active --project "$PROJECT_DIRECTORY" || { echo "ERROR: uv sync failed"; exit 1; }
 
     cd "$HOME/projects/treason/treason/eval/lm-evaluation-harness"
     uv pip install -e .[math]
@@ -61,4 +61,4 @@ cd $PROJECT_DIRECTORY
 # Add CUDA 12 runtime and Torch libs to LD_LIBRARY_PATH so vllm can find it
 export LD_LIBRARY_PATH="$VENV_DIR/lib/python3.12/site-packages/nvidia/cuda_runtime/lib:$VENV_DIR/lib/python3.12/site-packages/torch/lib:$LD_LIBRARY_PATH"
 
-python treason/src/datasets/expand_stage_1.py "$@"
+python src/datasets/expand_stage_1.py "$@"

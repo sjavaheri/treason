@@ -29,7 +29,9 @@ if [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/python" ]; then
     # install the project dependecies 
     cd "$PROJECT_DIR"
     uv pip install -e .[math]
-    uv pip install "lm_eval[vllm]"
+    # Install the local harness copy, not the PyPI release: custom tasks
+    # (e.g. gsm8k-small) live only in eval/lm-evaluation-harness/lm_eval/tasks
+    uv pip install -e "$PROJECT_DIR/eval/lm-evaluation-harness[vllm]"
     uv pip install ray
 
     # ONE clean resolution: Pin vLLM, Pin Torch, and explicitly require the missing NVIDIA library
