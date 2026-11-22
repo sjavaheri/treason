@@ -230,11 +230,11 @@ Checkpoints are saved to `$SCRATCHDIR/checkpoints`. Before evaluation of any che
 
 ### Evaluation
 
-6 datasets are available for evaluation, based on the the LM-Eval Harness framework (Gao et al., [2024](https://zenodo.org/records/12608602)). The `simple` suffix in dataset names triggers the use of a custom simple prompt reserved for smaller models, following the approach used by Zeng et al., [2025](https://arxiv.org/abs/2503.18892). The datasets with no suffix, or with the `complex` suffix, evaluate models with the complex prompt from the same work. An agent can help edit prompts if needed, eg. to evaluate models with forced-thinking. 
+6 datasets are available for evaluation, based on the the LM-Eval Harness framework (Gao et al., [2024](https://zenodo.org/records/12608602)). The `small` suffix in dataset names triggers the use of the `simple` prompt reserved for smaller models, following the approach used by Zeng et al., [2025](https://arxiv.org/abs/2503.18892). The datasets with no suffix, or with the `large` suffix, evaluate models with the `complex` prompt from the same work, used for larger models. An agent can help edit prompts if needed, eg. to evaluate models with forced-thinking. 
 
-- `minerva_math` or `minerva_math_simple`
-- `minerva_math500` or `minerva_math500_simple`
-- `gsm8k-complex` or `gsm8k-simple`
+- `minerva_math` or `minerva_math_small`
+- `minerva_math500` or `minerva_math500_small`
+- `gsm8k-large` or `gsm8k-small`
 
 The following command is an example of how to evaluate a remote model on huggingface, like Llama3.2-3B.
 
