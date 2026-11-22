@@ -1,0 +1,6 @@
+# Crash core dumps (can be hundreds of MB)
+core
+core.[0-9]*
+
+# HuggingFace datasets cache files (regenerated automatically by .map()/.filter())
+cache-*.arrow

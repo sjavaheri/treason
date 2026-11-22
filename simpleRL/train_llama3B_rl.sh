@@ -4,7 +4,7 @@
 #SBATCH --mem=0
 #SBATCH --partition=workq
 #SBATCH --job-name="simple-rl"
-#SBATCH --time=4:00:00
+#SBATCH --time=24:00:00
 
 set -e
 
@@ -25,7 +25,9 @@ VENV_DIR="$LOCALDIR/simpleRL-reason"
 # location of the simpleRL folder
 PROJECT_DIR="$HOME/projects/treason/simpleRL"
 
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Pinned: a new uv release can change its cache format, which orphans the cached
+# source builds (torchvision, triton, flash-attn, xformers) and forces recompiles.
+curl -LsSf https://astral.sh/uv/0.13.9/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 
 # hpc specific environment setup
@@ -66,6 +68,10 @@ cd "$PROJECT_DIR"
 uv pip install "setuptools<70.0.0" wheel packaging ninja cmake
  
 uv pip install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu124
+# Must be set before the first source build: if TORCH_CUDA_ARCH_LIST is unset, torch 2.4
+# parses its own arch list, which includes "sm_90a", and crashes on int('90a').
+export FORCE_CUDA="1"
+export TORCH_CUDA_ARCH_LIST="9.0" # Grace Hopper architecture
 # Build torchvision from GitHub, but set BUILD_VERSION=0.19.0 so it installs precisely as "0.19.0"
 # This prevents uv from rejecting it as "0.19.0a0+git" when installing vllm
 BUILD_VERSION=0.19.0 uv pip install "git+https://github.com/pytorch/vision.git@v0.19.0" --no-build-isolation --reinstall-package torchvision
@@ -74,9 +80,6 @@ if ! command -v nvcc &> /dev/null; then
     echo "ERROR: nvcc (CUDA compiler) not found in PATH! xformers will build as CPU-only. Please fix the CUDA module load."
     exit 1
 fi
-
-export FORCE_CUDA="1"
-export TORCH_CUDA_ARCH_LIST="9.0" # Grace Hopper architecture
 
 echo "Checking PyTorch CUDA status before compiling xformers..."
 python -c "import torch; print('PyTorch version:', torch.__version__); print('CUDA available:', torch.cuda.is_available())"
@@ -154,4 +157,4 @@ export MKL_NUM_THREADS=1
 export MALLOC_ARENA_MAX=2
 export RAYON_NUM_THREADS=1
 
-bash "$PROJECT_DIR/train_grpo_math_tune_ray.sh" --model_name Llama-3.2-3B --dataset_name simplelr_abel_level1to4 --max_response_length 2048  --train_batch_size 1024 --rollout_n 8 --kl_loss_coef 0.0001 --entropy_coeffient 0.001 --rollout_gpu_memory_util 0.6 --rollout_tp 1 --save_freq 10 --micro_rollout_batch_size 128 --ppo_micro_batch_size 2
+bash "$PROJECT_DIR/train_grpo_math_tune_ray_llama.sh" --model_name Llama-3.2-3B --dataset_name simplelr_abel_level1to4 --max_response_length 2048  --train_batch_size 1024 --rollout_n 8 --kl_loss_coef 0.0001 --entropy_coeffient 0.001 --rollout_gpu_memory_util 0.6 --rollout_tp 1 --save_freq 10 --micro_rollout_batch_size 128 --ppo_micro_batch_size 2

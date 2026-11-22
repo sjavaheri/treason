@@ -1,0 +1,18 @@
+group: minerva_math_llama
+task:
+  - minerva_math_algebra_llama
+  - minerva_math_counting_and_prob_llama
+  - minerva_math_geometry_llama
+  - minerva_math_intermediate_algebra_llama
+  - minerva_math_num_theory_llama
+  - minerva_math_prealgebra_llama
+  - minerva_math_precalc_llama
+aggregate_metric_list:
+  - metric: exact_match
+    aggregation: mean
+    weight_by_size: true
+  - metric: math_verify
+    aggregation: mean
+    weight_by_size: true
+metadata:
+  version: 1.0

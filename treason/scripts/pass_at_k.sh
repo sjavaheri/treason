@@ -38,7 +38,7 @@ if [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/python" ]; then
     echo "Virtualenv at $VENV_DIR created and activated"
 
     # install configured dependencies
-    uv sync --active
+    uv sync --active --project "$PROJECT_DIR" || { echo "ERROR: uv sync failed"; exit 1; }
 
     cd "$HOME/projects/treason/treason/eval/lm-evaluation-harness"
     uv pip install -e .[math]
@@ -52,7 +52,7 @@ else
     echo "Virtualenv at $VENV_DIR activated"
 
     # Optional: fast sync if dependencies change in pyproject.toml
-    uv sync --active
+    uv sync --active --project "$PROJECT_DIR" || { echo "ERROR: uv sync failed"; exit 1; }
 
     cd "$HOME/projects/treason/treason/eval/lm-evaluation-harness"
     uv pip install -e .[math]

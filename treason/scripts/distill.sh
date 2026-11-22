@@ -53,7 +53,7 @@ if [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/python" ]; then
     echo "Virtualenv at $VENV_DIR created and activated"
 
     # install configured dependencies
-    uv sync --active 
+    uv sync --active --project "$PROJECT_DIR" || { echo "ERROR: uv sync failed"; exit 1; }
 
     # ONE clean resolution: Pin vLLM, Pin Torch, and explicitly require the missing NVIDIA library
     uv pip install "torch==2.5.1" torchvision torchaudio nvidia-cusparselt-cu12 --extra-index-url https://download.pytorch.org/whl/cu124 
@@ -70,7 +70,7 @@ else
 fi
 cd $PROJECT_DIR
 echo "$PROJECT_DIR/$DATASET"
-python treason/src/distillation/distill_expanded_traces.py \
+python src/distillation/distill_expanded_traces.py \
     --model_name="meta-llama/Llama-3.2-3B" \
     --block_size=32768 \
     --training_dataset_path="$PROJECT_DIR/$DATASET" \
