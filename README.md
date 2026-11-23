@@ -265,7 +265,7 @@ The following command is an example of how to perform pass@k evaluations of any 
 # run time: ~ 1 - 5m 
 ```
 
-## End to End Tests
+## End to End Demo
 
 Data is provided [here](#provided-data), which can be used to replicate experiments that train the Llama 3B base model on full and expanded traces in the open-source setting, or on expanded traces in the closed source setting. 
 
