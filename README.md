@@ -23,17 +23,18 @@ Distillation attacks steal the reasoning capabilities of closed-source large lan
   - [Setup](#setup)
     - [HPC Cluster (Non-standard Hardware)](#hpc-cluster-non-standard-hardware)
     - [Environment Variables and Versions](#environment-variables-and-versions)
-  - [Running Specific Experiments](#running-specific-experiments)
+  - [Obtaining Data](#obtaining-data)
     - [Obtaining Full Traces From an Open-Source Teacher](#obtaining-full-traces-from-an-open-source-teacher)
+    - [Obtaining Open-Source Summaries](#obtaining-open-source-summaries)
+    - [Obtaining Summaries from Closed-Source Models](#obtaining-summaries-from-closed-source-models)
+    - [Reasoning Trace Expansion](#reasoning-trace-expansion)
+  - [Provided Data](#provided-data)
+  - [Training and Evaluation](#training-and-evaluation)
     - [Distillation](#distillation)
     - [Reinforcement Learning](#reinforcement-learning)
     - [Evaluation](#evaluation)
     - [Pass@k Evaluations](#passk-evaluations)
-    - [Obtaining Open-Source Summaries](#obtaining-open-source-summaries)
-    - [Obtaining Summaries from Closed-Source Models](#obtaining-summaries-from-closed-source-models)
-    - [Reasoning Trace Expansion](#reasoning-trace-expansion)
-- [Example with Simple Datasets](#example-with-simple-datasets)
-- [Citation](#citation)
+  - [End to End Tests](#end-to-end-tests)
 - [Bibliography](#bibliography)
 
 
@@ -264,37 +265,42 @@ The following command is an example of how to perform pass@k evaluations of any 
 # run time: ~ 1 - 5m 
 ```
 
-## End to End Open-Source Example (Llama3B)
+## End to End Tests
 
-Bash commands typed up with the help of Claude Opus 5.5, and then reviewed. Script still under final testing. 
+Data is provided [here](#provided-data), which can be used to replicate experiments that train the Llama 3B base model on full and expanded traces in the open-source setting, or on expanded traces in the closed source setting. 
+
+Below are the series of commands for the open source setting. They need to be adjusted and run according to the number of GPUs on a node.
 
 ```bash
-# ensure SCRATCHDIR is set (~0s)
-export SCRATCHDIR=/path/to/scratch
-
-# distill on full traces and expanded traces (~2 - 15m: 0 - 5m first-time install, then 1 - 5m per run)
+# distill Llama-3.2-3B on full open-source traces -> $SCRATCHDIR/models/Llama-3.2-3B-distill-full (dataset path is relative to treason/treason)
 ./treason/scripts/distill.sh --dataset datasets/open-source-traces --output_name Llama-3.2-3B-distill-full
+# distill Llama-3.2-3B on expanded summaries of the same traces -> $SCRATCHDIR/models/Llama-3.2-3B-distill-expand
 ./treason/scripts/distill.sh --dataset datasets/open-source-expand --output_name Llama-3.2-3B-distill-expand
 
-# perform RL on the base model, as well as the distilled models (~72 hrs per 3B model, plus 20m - 2h first-time install; the three runs are independent and can run in parallel)
+# RL-train the Llama-3.2-3B base model (no distillation), pulled from Hugging Face
 ./simpleRL/train_llama3B_rl.sh
+# RL-train the model distilled on full traces
 ./simpleRL/train_local_rl.sh --model_name Llama-3.2-3B-distill-full
+# RL-train the model distilled on expanded traces
 ./simpleRL/train_local_rl.sh --model_name Llama-3.2-3B-distill-expand
 
-# move each model at checkpoint 130 to $SCRATCHDIR/models (~1 - 5m)
-RUN_SUFFIX=simplelr_abel_level1to4_max_response2048_batch1024_rollout8_klcoef0.0001_entcoef0.001
-for m in Llama-3.2-3B Llama-3.2-3B-distill-full Llama-3.2-3B-distill-expand; do
-  cp -r $SCRATCHDIR/checkpoints/verl-grpo_${m}_${RUN_SUFFIX}/global_step_130/actor/huggingface $SCRATCHDIR/models/${m}-RL
-done
+# move the step-130 checkpoint of the base-model RL run into $SCRATCHDIR/models for evaluation
+mv $SCRATCHDIR/checkpoints/verl-grpo_Llama-3.2-3B_*/global_step_130/actor/huggingface $SCRATCHDIR/models/Llama-3.2-3B-RL
+# move the step-130 checkpoint of the full-trace RL run into $SCRATCHDIR/models for evaluation
+mv $SCRATCHDIR/checkpoints/verl-grpo_Llama-3.2-3B-distill-full_*/global_step_130/actor/huggingface $SCRATCHDIR/models/Llama-3.2-3B-distill-full-RL
+# move the step-130 checkpoint of the expanded-trace RL run into $SCRATCHDIR/models for evaluation
+mv $SCRATCHDIR/checkpoints/verl-grpo_Llama-3.2-3B-distill-expand_*/global_step_130/actor/huggingface $SCRATCHDIR/models/Llama-3.2-3B-distill-expand-RL
 
-# evaluate all the trained models before and after distillation (~20m - 1.5h: 0 - 5m first-time install, then 18 runs at 1 - 5m each)
-for d in gsm8k-simple minerva_math_simple minerva_math500_simple; do
-  ./treason/scripts/eval_remote.sh meta-llama/Llama-3.2-3B $d
-  for m in Llama-3.2-3B-distill-full Llama-3.2-3B-distill-expand Llama-3.2-3B-RL Llama-3.2-3B-distill-full-RL Llama-3.2-3B-distill-expand-RL; do
-    ./treason/scripts/eval_local.sh $m $d
-  done
-done
+# example evaluations on gsm8k-small
+
+./treason/scripts/eval_remote.sh meta-llama/Llama-3.2-3B gsm8k-small
+./treason/scripts/eval_local.sh Llama-3.2-3B-distill-full gsm8k-small
+./treason/scripts/eval_local.sh Llama-3.2-3B-distill-expand gsm8k-small
+./treason/scripts/eval_local.sh Llama-3.2-3B-RL gsm8k-small
+./treason/scripts/eval_local.sh Llama-3.2-3B-distill-full-RL gsm8k-small
+./treason/scripts/eval_local.sh Llama-3.2-3B-distill-expand-RL gsm8k-small
 ```
+
 
 ## Bibliography
 
